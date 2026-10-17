@@ -69,3 +69,57 @@ El flujo original separaba Clip 03 (enviar el prompt de creación de esquema) y 
 ### Consecuencias y alternativas descartadas
 - **Descartado:** Mostrar la animación de carga/procesamiento de la IA. Aporta cero valor pedagógico y ralentiza el tutorial.
 - **Resultado:** Vídeo mucho más dinámico (~25s en lugar de 40s+), enfocado 100% en la acción y en el resultado tangible.
+
+---
+
+## ADR-004: Mezcla de Cama Musical Relativa y Normalización Estéreo EBU R128
+
+- **Fecha:** 16 de octubre de 2026
+- **Estado:** Aceptado e implementado
+
+### Contexto
+El tutorial requería una pista musical de fondo para darle dinamismo, ritmo moderno y energía, pero sin competir con la voz de la narración ni dificultar la comprensión en altavoces de teléfonos móviles.
+
+### Decisión
+1. **La voz es el ancla absoluta:**  
+   Nunca se ajusta la voz a la música. Se mide primero la sonoridad integrada en LUFS de la locución (`medir_lufs` -> `-14.36 LUFS`).
+2. **Cálculo de ganancia relativa matemática:**  
+   La música se coloca exactamente a **18 dB por debajo de la voz**:
+   $$\text{objetivo} = \text{LUFS}_{\text{voz}} - 18.0\text{ dB}$$
+   $$\text{ganancia} = 10^{\frac{\text{objetivo} - \text{LUFS}_{\text{musica}}}{20.0}}$$
+   Para `The_Iron_Grove` (-13.65 LUFS), esto supuso una atenuación de **-18.71 dB** (multiplicador $\times 0.1160$).
+3. **Mapeo estéreo espacial:**  
+   La narración mono se centra en el panorama estéreo (`aformat=channel_layouts=stereo`), mientras que la música conserva su imagen estéreo espacial completa.
+4. **Bucle y fundidos:**  
+   Se utiliza `-stream_loop -1` para cubrir los últimos 2.63 segundos del vídeo, con un `fade-in` inicial de 1.5s y un `fade-out` de cierre de 2.5s que remata exactamente con el final del vídeo.
+5. **Master final YouTube:**  
+   Mezcla con `amix` (sin atenuar la voz) y masterización mediante filtro `loudnorm` de dos pasadas alcanzando **`-14.02 LUFS`** (objetivo: -14.0 LUFS) y **`-3.37 dBTP`** (sin distorsión ni clipping), manteniendo el vídeo original intacto (`-c:v copy`).
+
+### Consecuencias y alternativas descartadas
+- **Descartado:** Fijar un volumen de música a ojo o con un porcentaje arbitrario (ej. "volumen al 20%"). Las pistas musicales de stock varían enormemente en compresión y masterización; medir en LUFS garantiza consistencia industrial entre vídeos.
+
+---
+
+## ADR-005: Sanitización Digital de Seguridad en Grabaciones de Pantalla (Regla 12)
+
+- **Fecha:** 16 de octubre de 2026
+- **Estado:** Aceptado e implementado
+
+### Contexto
+Durante la revisión previa a publicación, se identificó que en la barra lateral izquierda de Antigravity IDE (`Projects`) se leían claramente nombres de proyectos reales, clientes y repositorios privados (`rifasonlineapp`, `jercol-tech-web`, `Base Hipica`, etc.). Publicar dicha información vulneraba la Regla 12 de seguridad de `GEMINI.md`.
+
+### Decisión
+1. **Recorte digital con fondo nativo plano (`drawbox`):**  
+   Aprovechando que el fondo de la interfaz de Antigravity es un color uniforme (`#161616` / BGR `[22, 22, 22]`), se aplica una máscara sólida que vacía el área de proyectos convirtiéndola en un espacio oscuro limpio y natural.
+2. **Calibración milimétrica de coordenadas (v2):**  
+   - **X (Horizontal):** De `0` a `320` píxeles. Se detiene exactamente en la línea divisoria vertical (`x=320`), eliminando cualquier pestaña o solapamiento sobre el área de chat.
+   - **Y (Vertical):** De `305` a `940` píxeles. Deja intacto y legible el menú superior `Customizations` (que termina en `y=275`) con 30 px de margen, y preserva abajo el acceso a `Settings` (que inicia en `y=985`).
+3. **Máscara temporal condicional:**  
+   El filtro se activa únicamente durante los instantes en que Antigravity está en pantalla mediante expresiones `enable='gte(t, ...)'`, respetando al 100% las pantallas de Chrome/Supabase.
+4. **Integración en el código base:**  
+   Se incorporó directamente en los scripts de montaje de cada tramo (`scripts/montar_tramo_01.py` a `04.py`), de forma que cualquier re-renderizado futuro esté sanitizado por defecto.
+
+### Consecuencias y alternativas descartadas
+- **Descartado:** Regrabar las pantallas en OBS. El parche digital con el color exacto es indistinguible de la interfaz nativa y ahorra tiempo sin introducir desajustes con el audio ya cronometrado.
+- **Descartado:** Desenfoque / difuminado gaussiano (*blur*). Un recuadro borroso llama la atención del espectador y evidencia censura; el fondo plano limpio hace parecer que simplemente no hay proyectos recientes abiertos.
+
