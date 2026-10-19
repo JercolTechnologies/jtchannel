@@ -1,0 +1,160 @@
+1
+00:00:00,000 --> 00:00:01,960
+Every AI influencer sold you that
+
+2
+00:00:01,960 --> 00:00:04,040
+you need LangChain and complex vector
+
+3
+00:00:04,040 --> 00:00:05,900
+databases to build semantic search.
+
+4
+00:00:06,420 --> 00:00:07,480
+That's complete hype.
+
+5
+00:00:08,260 --> 00:00:09,520
+You already have Postgres.
+
+6
+00:00:10,140 --> 00:00:11,940
+Today, we're doing raw vector search
+
+7
+00:00:11,940 --> 00:00:14,480
+in Supabase with zero frameworks and
+
+8
+00:00:14,480 --> 00:00:15,660
+just four lines of code.
+
+9
+00:00:16,740 --> 00:00:19,260
+First, jump into your Supabase dashboard.
+
+10
+00:00:19,940 --> 00:00:21,860
+Open the SQL Editor and enable
+
+11
+00:00:21,860 --> 00:00:22,780
+the vector extension.
+
+12
+00:00:23,260 --> 00:00:24,920
+Then create a simple table with
+
+13
+00:00:24,920 --> 00:00:26,580
+a vector column matching your model's
+
+14
+00:00:26,580 --> 00:00:26,900
+dimensions.
+
+15
+00:00:27,620 --> 00:00:28,140
+That's it.
+
+16
+00:00:28,640 --> 00:00:30,040
+Your database is now an AI
+
+17
+00:00:30,040 --> 00:00:30,740
+vector store.
+
+18
+00:00:31,460 --> 00:00:34,200
+In the Table Editor, we've populated
+
+19
+00:00:34,200 --> 00:00:36,300
+our documents with sample records and
+
+20
+00:00:36,300 --> 00:00:38,920
+their 1536-dimensional embeddings.
+
+21
+00:00:39,500 --> 00:00:41,460
+Ready to be matched against any
+
+22
+00:00:41,460 --> 00:00:42,000
+concept.
+
+23
+00:00:42,860 --> 00:00:44,660
+Now the Python side.
+
+24
+00:00:45,360 --> 00:00:46,660
+We grab an embedding for our
+
+25
+00:00:46,660 --> 00:00:49,240
+query using OpenAI's small model in
+
+26
+00:00:49,240 --> 00:00:49,900
+two lines.
+
+27
+00:00:50,540 --> 00:00:53,300
+Then, connect straight to Supabase and
+
+28
+00:00:53,300 --> 00:00:55,100
+query your table using the native
+
+29
+00:00:55,100 --> 00:00:56,520
+cosine distance operator.
+
+30
+00:00:56,900 --> 00:01:00,300
+No wrappers, no bloated abstractions—just pure
+
+31
+00:01:00,300 --> 00:01:02,220
+SQL finding the nearest neighbor.
+
+32
+00:01:02,960 --> 00:01:05,960
+And boom: instant semantic match with
+
+33
+00:01:05,960 --> 00:01:08,260
+sub-second latency and total control over
+
+34
+00:01:08,260 --> 00:01:08,720
+your query.
+
+35
+00:01:09,260 --> 00:01:10,760
+Stop adding layers you don't need.
+
+36
+00:01:11,200 --> 00:01:12,760
+And hey—if you want an autonomous
+
+37
+00:01:12,760 --> 00:01:14,530
+AI agent to manage your Supabase
+
+38
+00:01:14,580 --> 00:01:16,480
+database and run these setups for
+
+39
+00:01:16,480 --> 00:01:18,440
+you, check out my previous video
+
+40
+00:01:18,440 --> 00:01:19,660
+on the screen right now.
+

@@ -123,3 +123,34 @@ Durante la revisión previa a publicación, se identificó que en la barra later
 - **Descartado:** Regrabar las pantallas en OBS. El parche digital con el color exacto es indistinguible de la interfaz nativa y ahorra tiempo sin introducir desajustes con el audio ya cronometrado.
 - **Descartado:** Desenfoque / difuminado gaussiano (*blur*). Un recuadro borroso llama la atención del espectador y evidencia censura; el fondo plano limpio hace parecer que simplemente no hay proyectos recientes abiertos.
 
+---
+
+## ADR-006: Pipeline de Búsqueda Vectorial Pura (Supabase + pgvector) y Ensamblado de 5 Tramos
+
+- **Fecha:** 19 de octubre de 2026
+- **Estado:** Aceptado e implementado
+
+### Contexto
+Producción del Vídeo 02 (*Stop Using LangChain: Raw Supabase Vector Search*). El objetivo pedagógico era demostrar que no hacen falta frameworks pesados (como LangChain con decenas de dependencias) para construir búsqueda semántica en producción, bastando 8 líneas de Python (`psycopg` + OpenAI embeddings + operador nativo `<=>` de pgvector en Supabase).
+
+### Decisiones
+1. **Estructura modular en 5 tramos con clip puente pedagógico (Tramo 03):**
+   - A petición editorial para responder a la duda del espectador de "¿dónde están almacenados los datos?", se incorporó el tramo puente `clip_02_b` mostrando el *Table Editor* de Supabase con los registros poblados (`Tesla Model 3`, `iPhone 15 Pro`) y sus vectores reales de 1536 dimensiones.
+2. **Eliminación de latencia de red mediante Jump Cut quirúrgico:**
+   - En `clip_03`, la espera de red de 11 segundos de la llamada a la API y una ventana emergente de notificación de VS Code fueron recortadas limpiamente en FFmpeg, conectando la pulsación de *Enter* con la respuesta en pantalla en < 0.2 segundos aparentes.
+3. **Cámara digital con zoom programático (FFmpeg):**
+   - Ante la limitación de realizar zoom interactivo en OBS durante la grabación de pantalla, se implementó en FFmpeg un zoom digital suave del 125% (`crop=w=1536:h=864:x=0:y=216,scale=1920:1080:flags=bicubic`) centrado en la esquina inferior izquierda de la terminal durante el Tramo 05 para garantizar máxima legibilidad en dispositivos móviles.
+4. **Sincronización milimétrica de cortes (Regla 11 bis / ADR-002):**
+   - Los 5 tramos se anclaron dinámicamente al fin de locución de `nova` (`gpt-4o-mini-tts`), manteniendo un margen de cierre estricto de entre 1.10s y 1.14s tras la última palabra hablada, erradicando cualquier cola estática o silencio muerto.
+5. **Masterización de audio estéreo y cama musical (ADR-004):**
+   - Mezcla de locución y pista musical `musica.mp3` atenuada a exactamente **-18.0 dB relativo** (multiplicador $\times 0.1160$) con *fade-in* de 1.5s y *fade-out* de 2.5s.
+   - Doble pasada de `loudnorm` con `-c:v copy` alcanzando **`-14.01 LUFS`** integrada y **`-3.01 dBTP`** (cumplimiento exacto EBU R128 para YouTube).
+6. **Subtítulos sincronizados alineados al guion oficial:**
+   - Transcripción Whisper `base` palabra por palabra y alineación algorítmica con `SequenceMatcher` contra el guion oficial en inglés, asegurando 100% de precisión ortográfica en términos técnicos (*pgvector*, *Supabase*, *LangChain*, *Postgres*).
+
+### Consecuencias y alternativas descartadas
+- **Descartado:** Saltar directo de SQL a Python sin mostrar el *Table Editor*. Dejaba un vacío pedagógico confuso sobre el origen de los datos vectorizados.
+- **Descartado:** Mostrar la espera de 11 segundos en la terminal de VS Code. Habría destruido la retención de audiencia en los primeros 60 segundos del vídeo.
+- **Resultado:** Vídeo de 80.82 segundos, ultra-dinámico, técnicamente impecable y listo para publicar.
+
+

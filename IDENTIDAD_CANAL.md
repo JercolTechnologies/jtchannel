@@ -58,11 +58,11 @@ assets/
 │   ├── avatar.png          # Foto de perfil (800x800, circular)
 │   └── banner.png          # Portada YouTube (2560x1440, Safe Area 1546x423)
 │
-└── videos/                 # Assets organizados por vídeo
-    ├── video_01/           # Antigravity + Supabase
-    │   ├── thumbnail.png   # Miniatura oficial 1280x720 (< 2MB)
-    │   └── metadata.md     # Título, descripción y tags
-    └── video_02/
+└── videos/                 # Assets organizados por nombre descriptivo de vídeo
+    ├── antigravity_supabase/       # Vídeo 1: Antigravity + Supabase
+    │   ├── thumbnail.png           # Miniatura oficial 1280x720 (< 2MB)
+    │   └── metadata.md             # Título, descripción y tags
+    └── raw_supabase_vector_search/ # Vídeo 2: Búsqueda vectorial cruda en Supabase
         ...
 ```
 
