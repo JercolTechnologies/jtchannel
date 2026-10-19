@@ -44,12 +44,12 @@ Documento oficial de empaque y metadatos para YouTube según las directivas de `
 
 - **Archivo Oficial:** `assets/videos/raw_supabase_vector_search/thumbnail.jpg`
 - **Dimensiones:** `1280 × 720` (16:9 exacto).
-- **Peso:** **294.7 KB** (Límite estricto de YouTube: 2048 KB).
-- **Texto:** `DITCH THE BLOAT` (3 palabras, tipografía metálica 3D con rim light cian neón de alto contraste).
-- **Composición e Iluminación:**
-  - Rayo esmeralda Supabase rompiendo la cadena pesada de dependencias con chispas de alta energía en el borde derecho (evita fundirse con el fondo `#0f0f0f` del modo oscuro de YouTube).
-  - Badge de Python en la esquina inferior izquierda.
-  - Test de legibilidad a **120 px de ancho** superado con total claridad (`thumbnail_120px_test.png`).
+- **Peso:** **189.9 KB** (Límite estricto de YouTube: 2048 KB).
+- **Texto:** `DITCH THE BLOAT` (3 palabras, tipografía limpia bold, contraste blanco y esmeralda `#3ECF8E`).
+- **Composición e Identidad Visual:**
+  - Estilo técnico artesanal directo (cero IA slop): código real de VS Code a la izquierda mostrando los imports pesados de LangChain vs ventana de terminal flotante con el SQL de `pgvector` en 5 líneas limpias.
+  - Logos vectoriales oficiales de Supabase y Python con destello de energía rompiendo la cadena.
+  - Test de legibilidad a **120 px de ancho** superado con máxima nitidez para feeds móviles.
 
 ---
 
@@ -59,6 +59,13 @@ Documento oficial de empaque y metadatos para YouTube según las directivas de `
 You don't need LangChain, complex frameworks, or dedicated vector databases to build semantic search. Here is how to do raw vector search in Supabase using PostgreSQL pgvector and 8 lines of pure Python.
 
 Every AI influencer sold you heavy abstractions with hundreds of dependencies. In reality, Postgres already does cosine distance search natively with sub-second latency.
+
+---
+🛠️ TECH STACK & CONCEPTS:
+• Native pgvector & PostgreSQL database execution
+• Direct OpenAI embedding generation (text-embedding-3-small)
+• Native cosine distance operator (<=>) in raw SQL (zero RPC wrappers)
+• Framework-free vector search for AI agents (No LangChain bloat)
 
 ---
 ⚡ SQL SETUP (Supabase SQL Editor):
