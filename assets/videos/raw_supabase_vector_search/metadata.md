@@ -42,7 +42,7 @@ Documento oficial de empaque y metadatos para YouTube según las directivas de `
 
 ## 3. Miniatura Oficial (Thumbnail)
 
-- **Archivo Oficial:** `assets/videos/raw_supabase_vector_search/thumbnail_1280x720.jpg`
+- **Archivo Oficial:** `assets/videos/raw_supabase_vector_search/thumbnail.jpg`
 - **Dimensiones:** `1280 × 720` (16:9 exacto).
 - **Peso:** **294.7 KB** (Límite estricto de YouTube: 2048 KB).
 - **Texto:** `DITCH THE BLOAT` (3 palabras, tipografía metálica 3D con rim light cian neón de alto contraste).
