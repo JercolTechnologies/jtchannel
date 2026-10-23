@@ -22,20 +22,20 @@ Documento oficial de empaque y metadatos para YouTube según las directivas de `
 
 ## 2. Título Oficial para YouTube
 
-### Opción Principal (Recomendada — 44 caracteres):
-**`Fix Cursor MCP Server Errors: The ENOENT Fix`**
+### Opción Principal Elegida (46 caracteres):
+**`Fix Cursor MCP Server Error: spawn ENOENT Fix`**
 
-- **Front-loading:** `Fix Cursor MCP Server Errors` en los primeros 28 caracteres.
+- **Front-loading:** `Fix Cursor MCP Server Error` en los primeros 27 caracteres + el error literal `spawn ENOENT Fix`.
 - **Recuento de keywords en la locución (§2 `PUBLICACION.md`):**
   - *Cursor:* Tramo 01 (2 veces), Tramo 02 (1 vez) — Total: 3 menciones.
   - *MCP server:* Tramo 01, Tramo 03 — Total: 2 menciones (+ `mcp.json` en Tramo 02).
-  - *ENOENT / error:* Tramo 01 (*"fails with a red 'spawn ENOENT' error"*).
+  - *spawn ENOENT / error:* Tramo 01 (*"fails with a red 'spawn ENOENT' error"*).
   - *Fix:* Tramo 02 (*"The fix takes ten seconds"*), Tramo 03 (*"zero-fluff dev fixes"*).
 
 ### Opciones Alternativas (41–55 caracteres):
-1. `Cursor MCP spawn ENOENT Error: 10-Second Fix` (44 caracteres)
-2. `How to Fix Cursor MCP Server Connection Errors` (46 caracteres)
-3. `Fix Cursor MCP Server Red Error (uvx & npx)` (43 caracteres)
+1. `Fix Cursor MCP Server Errors: The ENOENT Fix` (44 caracteres)
+2. `Fix Cursor MCP spawn ENOENT Error (uvx & npx Fix)` (51 caracteres)
+3. `How to Fix Cursor MCP Server Connection Errors` (46 caracteres)
 
 ---
 
@@ -52,57 +52,40 @@ Documento oficial de empaque y metadatos para YouTube según las directivas de `
 
 ---
 
-## 4. Descripción Oficial de YouTube
+## 4. Descripción Oficial de YouTube (SEO Optimizada)
 
 ```text
-Getting a red "spawn uvx ENOENT", "spawn npx ENOENT", or "MCP error -32000: Connection closed" when adding an MCP server in Cursor? Here is the exact 10-second fix for Windows and Mac.
+Getting a red "spawn uvx ENOENT", "spawn npx ENOENT", or "MCP error -32000: Connection closed" in Cursor? Here is the 10-second fix when your Cursor MCP server is not working on Windows or Mac, even though the exact same command runs fine in your terminal.
 
-Even when uvx or npx works fine in your integrated terminal, Cursor is a desktop GUI application—meaning it often fails to inherit your shell's PATH or tries to spawn Windows .cmd wrappers without an extension.
+Why does this happen? Cursor is a standalone desktop GUI app—it often fails to inherit your terminal's shell PATH environment variable (breaking uvx, Node, Python, or NVM), and on Windows it cannot spawn batch wrappers like npx.cmd directly without an extension or cmd /c.
 
----
-⚡ STEP 1: FIND THE FULL EXECUTABLE PATH
-In Windows PowerShell (make sure to include .exe so PowerShell doesn't trigger the Where-Object alias):
-where.exe uvx
-where.exe npx
+Instead of watching a 30-minute tutorial to find a 10-second path fix, here is the exact step-by-step solution to get your Cursor Model Context Protocol (MCP) servers connected in green:
 
-On macOS / Linux:
-which uvx
-which npx
+1. Find the full executable path in your terminal:
+In Windows PowerShell, run "where.exe uvx" or "where.exe npx" (always include the .exe extension in PowerShell so it runs the system binary instead of the Where-Object alias). On macOS or Linux, run "which uvx" or "which npx".
 
----
-🛠️ STEP 2: UPDATE .cursor/mcp.json WITH DOUBLE BACKSLASHES
-Replace the bare command name with the full absolute path (using double backslashes \\ on Windows):
+2. Update your .cursor/mcp.json configuration file:
+Paste the full absolute executable path into the "command" field of your .cursor/mcp.json file using double backslashes on Windows (for example, pointing directly to uvx.exe or npx.cmd), or wrap Windows batch scripts using "cmd" with "/c" and "npx" inside your args array.
 
-{
-  "mcpServers": {
-    "sqlite": {
-      "command": "C:\\Tools\\uv\\uvx.exe",
-      "args": [
-        "mcp-server-sqlite",
-        "--db-path",
-        "./test.db"
-      ]
-    }
-  }
-}
+3. Reload your MCP Server in Cursor Settings:
+Save your mcp.json config, open Cursor Settings (Customize > MCPs), and click Reload. Your MCP server will immediately switch from "Error - Show Output" / "MCP error -32000: Connection closed" to Connected (Green) with all tools loaded and ready for your AI coding agent.
 
-Save the file, click Reload in Cursor Settings > MCP, and your server will immediately light up green with all tools loaded.
+Errors covered and resolved in this video:
+- Cursor MCP spawn uvx ENOENT / spawn npx ENOENT
+- Cursor MCP error -32000: Connection closed
+- Cursor MCP Client closed / Failed to create client
+- Cursor MCP server red dot / Error - Show Output in Cursor 3.19+
+- PowerShell where vs where.exe PATH resolution for astral uv and Node NVM
 
----
-🧰 VERSIONS TESTED:
-• Cursor IDE 3.19.7
-• uv / uvx 0.13.5 (mcp-server-sqlite)
-• Windows 11 PowerShell
-
-#Cursor #MCP #ModelContextProtocol #AI #Coding #CursorAI #WebDev #DevTools
+#Cursor #MCP #ModelContextProtocol #CursorAI #AICoding #CodingTips #WebDevelopment #DevTools #WindowsDev #SoftwareEngineering
 ```
 
 ---
 
-## 5. Etiquetas / Tags (Indexador de YouTube)
+## 5. Etiquetas / Tags (Casilla de Etiquetas de YouTube Studio — 488/500 caracteres)
 
 ```text
-cursor mcp error, cursor spawn enoent, fix cursor mcp server, mcp error -32000 connection closed, cursor uvx enoent, cursor npx enoent, model context protocol cursor, cursor mcp.json windows, cursor mcp not working, where.exe uvx, cursor ide mcp setup, mcp-server-sqlite cursor, ai coding agent, cursor 2026 tutorial
+cursor mcp error, fix cursor mcp server, cursor spawn enoent, spawn uvx enoent, spawn npx enoent, mcp error -32000 connection closed, cursor mcp not working, cursor mcp client closed, cursor mcp failed to create client, cursor mcp.json windows, cursor mcp red dot, where.exe uvx, where.exe npx, model context protocol cursor, cursor ide mcp setup, cursor mcp server error fix, mcp-server-sqlite cursor
 ```
 
 ---
