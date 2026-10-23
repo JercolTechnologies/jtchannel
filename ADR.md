@@ -153,4 +153,33 @@ Producción del Vídeo 02 (*Stop Using LangChain: Raw Supabase Vector Search*). 
 - **Descartado:** Mostrar la espera de 11 segundos en la terminal de VS Code. Habría destruido la retención de audiencia en los primeros 60 segundos del vídeo.
 - **Resultado:** Vídeo de 80.82 segundos, ultra-dinámico, técnicamente impecable y listo para publicar.
 
+---
+
+## ADR-007: Entorno de Grabación Sanitizado desde Origen (`$PROFILE`) y Jump-Cut Invisible de Edición en Vivo (Video 03)
+
+- **Fecha:** 22 de octubre de 2026
+- **Estado:** Aceptado e implementado
+
+### Contexto
+Producción del Vídeo 03 (*Fix Cursor MCP Server Errors: The ENOENT Fix*, slug `cursor_mcp_enoent_fix`). El tutorial muestra cómo resolver el error `spawn uvx ENOENT` / `MCP error -32000: Connection closed` en Cursor (`3.19.7`) sobre Windows 11 usando PowerShell. Existían tres retos técnicos:
+1. En PowerShell, el comando `where uvx` invoca el alias interno `Where-Object` y no devuelve ninguna ruta, confundiendo al usuario.
+2. Mostrar la ruta por defecto de `winget` (`C:\Users\<usuario>\AppData\Local\...`) y el prompt de PowerShell (`PS C:\Users\<usuario>\...`) exponía el nombre de usuario local de Windows en múltiples líneas dinámicas de terminal y del editor JSON, dificultando la sanitización posterior con `drawbox`.
+3. Durante la grabación del `clip_02`, se produjo un error de pegado en `.cursor/mcp.json` (duplicación de la clave `"command"`) entre los segundos `24.5s` y `47.0s`.
+
+### Decisiones
+1. **Uso explícito de `where.exe` en PowerShell:**
+   - Se documentó y grabó `where.exe uvx` y `where.exe npx` para invocar el binario nativo `C:\Windows\System32\where.exe` evitando el alias `Where-Object`.
+2. **Sanitización preventiva desde el entorno (`Zero-Drawbox Privacy`):**
+   - Antes de grabar, se ubicó `uvx.exe` en una ruta neutra (`C:\Tools\uv\uvx.exe`) y se configuró temporalmente el `$PROFILE` de PowerShell con `function prompt { "PS $(Split-Path (Get-Location) -Leaf)> " }`.
+   - De este modo, tanto la terminal (`PS cursor_mcp_demo>`) como `.cursor/mcp.json` (`"C:\\Tools\\uv\\uvx.exe"`) quedaron 100% libres de datos personales desde la captura misma, sin necesidad de parches visuales post-grabación.
+3. **Jump-Cut invisible sincronizado al fonema de acción:**
+   - En lugar de regrabar el `clip_02`, se recortó quirúrgicamente el intervalo `24.5s–47.0s` en FFmpeg, haciendo coincidir el salto exactamente con la palabra *"paste"* (`19.00s` del Tramo 02 / `33.13s` del máster), logrando el efecto de un pegado instantáneo limpio.
+4. **Higiene de estación de trabajo post-producción:**
+   - Tras la aprobación del máster (`53.04s`, `-14.02 LUFS`), se desinstalaron `Anysphere.Cursor` y `astral-sh.uv` vía `winget`, se eliminaron las carpetas temporales y se restauró el `$PROFILE` original.
+
+### Consecuencias y alternativas descartadas
+- **Descartado:** Regrabar el `clip_02` por el tropiezo al pegar el JSON. El *jump-cut* sobre la selección de `"uvx"` ahorró tiempo de grabación y produjo una transición más rápida y limpia que el tipeo manual.
+- **Descartado:** Censurar rutas de usuario en la terminal con `drawbox` en movimiento. Sanitizar el prompt y la ruta antes de abrir OBS es más limpio, rápido y a prueba de fallos.
+
+
 

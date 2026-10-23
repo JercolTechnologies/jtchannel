@@ -1,0 +1,104 @@
+1
+00:00:00,000 --> 00:00:01,840
+You just added an MCP server
+
+2
+00:00:01,840 --> 00:00:03,740
+to Cursor, and it immediately fails
+
+3
+00:00:03,740 --> 00:00:06,140
+with a red 'spawn ENOENT' error.
+
+4
+00:00:06,840 --> 00:00:07,980
+Yet when you run the exact
+
+5
+00:00:07,980 --> 00:00:09,620
+same command in your terminal, it
+
+6
+00:00:09,620 --> 00:00:10,200
+works fine.
+
+7
+00:00:11,220 --> 00:00:12,540
+Why does Cursor think it doesn't
+
+8
+00:00:12,540 --> 00:00:12,820
+exist?
+
+9
+00:00:14,140 --> 00:00:16,340
+Cursor is a desktop GUI app—it
+
+10
+00:00:16,800 --> 00:00:18,560
+often fails to inherit your terminal's
+
+11
+00:00:18,560 --> 00:00:20,440
+PATH, or tries to spawn Windows
+
+12
+00:00:20,440 --> 00:00:23,380
+dot-cmd wrappers like npx without an
+
+13
+00:00:23,380 --> 00:00:23,800
+extension.
+
+14
+00:00:23,800 --> 00:00:25,680
+The fix takes ten seconds.
+
+15
+00:00:26,000 --> 00:00:29,500
+In PowerShell, run 'where.exe uvx' or
+
+16
+00:00:29,500 --> 00:00:33,340
+'where.exe npx'—don't forget the dot-exe—then paste
+
+17
+00:00:33,340 --> 00:00:35,400
+the full executable path into mcp.json
+
+18
+00:00:36,020 --> 00:00:37,220
+with double backslashes.
+
+19
+00:00:38,240 --> 00:00:40,980
+Save your config, hit Reload, and
+
+20
+00:00:40,980 --> 00:00:41,240
+boom:
+
+21
+00:00:41,740 --> 00:00:43,600
+your MCP server lights up green
+
+22
+00:00:43,600 --> 00:00:45,360
+with all six tools loaded and
+
+23
+00:00:45,360 --> 00:00:46,260
+ready for your agent.
+
+24
+00:00:46,780 --> 00:00:48,780
+If this saved your build, drop
+
+25
+00:00:48,780 --> 00:00:50,320
+a like and subscribe for more
+
+26
+00:00:50,320 --> 00:00:51,640
+zero-fluff dev fixes.
+

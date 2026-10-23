@@ -12,6 +12,7 @@ El objetivo es medir cuánto cuesta de verdad cada vídeo una vez engrasado el f
 |---|---|---|---|---|---|---|---|
 | **01: `antigravity_supabase`** | *Connect AI Agent to Supabase (Official MCP)* | 02:44 min | ~25 min | ~15 min | ~35 min (setup pipeline inicial) | ~15 min | **~90 min** (curva inicial de calibración de pipeline) |
 | **02: `raw_supabase_vector_search`** | *Stop Using LangChain: Raw Supabase Vector Search* | 01:21 min | ~20 min (4 clips) | ~10 min (5 micro-tramos) | ~20 min (scripts automatizados) | ~10 min | **~60 min** (reducción del 33% en tiempo de entrega) |
+| **03: `cursor_mcp_enoent_fix`** | *Fix Cursor MCP Server Errors: The ENOENT Fix* | 00:53 min | ~20 min (3 clips + guía Cursor) | ~5 min (3 micro-tramos) | ~12 min (montaje + jump-cut + miniatura) | ~5 min | **~42 min** (reducción acumulada del 53% frente al Vídeo 01) |
 
 ---
 
@@ -23,3 +24,6 @@ El objetivo es medir cuánto cuesta de verdad cada vídeo una vez engrasado el f
    - La grabación por micro-tramos funcionó con gran rapidez.
    - El script de transcripción Whisper + alineación de subtítulos se ejecutó en segundos sin intervención manual.
    - La implementación de zoom digital en FFmpeg resolvió la necesidad de zoom sin obligar a Miguel a pelear con atajos de OBS.
+3. **Vídeo 03:**
+   - A pesar de usar un IDE nuevo para Miguel (Cursor `3.19.7`), la preparación automatizada del proyecto (`preparar_entorno_demo.py`) y del prompt de PowerShell ahorró toda edición de privacidad posterior.
+   - El *jump-cut* quirúrgico en FFmpeg evitó regrabar un clip con error de pegado, manteniendo el tiempo de montaje + miniatura artesanal en apenas ~12 minutos.
