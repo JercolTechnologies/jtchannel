@@ -16,6 +16,16 @@ El objetivo es medir cuánto cuesta de verdad cada vídeo una vez engrasado el f
 
 ---
 
+## Historial de Producción por YouTube Short (9:16 @ 60fps)
+
+| Short ID / Slug | Vídeo Padre | Duración Short | Grabación Pantalla | Guion + TTS (`nova`) | Configuración `spec` + Render | Revisión & Metadatos | Tiempo Total Estimado |
+|---|---|---|---|---|---|---|---|
+| **S01: `short_01_antigravity_mcp`** | Vídeo 01 (`antigravity_supabase`) | 24.83 s | 0 min (reutiliza clips) | ~5 min | ~25 min (construcción y ajuste de `motor_shorts.py` v1 → v2) | ~5 min | **~35 min** (incluye creación del motor v2) |
+| **S02: `short_02_stop_using_langchain`** | Vídeo 02 (`raw_supabase_vector_search`) | 25.30 s | 0 min (reutiliza máster) | ~3 min | ~8 min (encuadres + loop exacto al frame `4.0s`) | ~3 min | **~14 min** (motor ya engrasado) |
+| **S03: `short_03_cursor_enoent_fix`** | Vídeo 03 (`cursor_mcp_enoent_fix`) | 25.17 s | 0 min (reutiliza máster) | ~3 min | ~8 min (sincronía por palabra + mapeo fonético `.ass`) | ~3 min | **~14 min** (producción en serie consolidada) |
+
+---
+
 ## Observaciones y Aprendizajes de Eficiencia
 
 1. **Vídeo 01:**
@@ -27,3 +37,6 @@ El objetivo es medir cuánto cuesta de verdad cada vídeo una vez engrasado el f
 3. **Vídeo 03:**
    - A pesar de usar un IDE nuevo para Miguel (Cursor `3.19.7`), la preparación automatizada del proyecto (`preparar_entorno_demo.py`) y del prompt de PowerShell ahorró toda edición de privacidad posterior.
    - El *jump-cut* quirúrgico en FFmpeg evitó regrabar un clip con error de pegado, manteniendo el tiempo de montaje + miniatura artesanal en apenas ~12 minutos.
+4. **Tanda 01 de Shorts (S01, S02, S03):**
+   - Coste de grabación para Miguel: **0 minutos** (se extraen directamente de los clips/másters de los vídeos largos).
+   - Una vez fijada la arquitectura v2 en `scripts/shorts/motor_shorts.py` ([ADR-008](file:///c:/Users/mapog/Documents/new_channel_agy/ADR.md#L186-L240)), producir cada nuevo Short lleva **~14 minutos de principio a fin** y menos de **\$0.01 USD** en API TTS (~330–400 caracteres por Short).

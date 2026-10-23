@@ -51,34 +51,83 @@ febrero). Por eso el coste por pieza manda.
 
 ---
 
-## 3. El diseño que hay que cerrar con Miguel antes de escribir código
+## 3. Arquitectura Cerrada y Estándar de Producción (NO INVENTAR — EJECUTAR TAL CUAL)
 
-El problema central es **el tiempo muerto**. Una grabación de pantalla tiene esperas
-(cargas, despliegues, escribir). Si la narración dura menos que el clip hay silencio, y si
-dura más hay que estirar el vídeo, y la forma fácil de estirarlo es **congelar el último
-frame**, que no da error y parece una decisión de diseño. En el pipeline original ese fue
-exactamente el tipo de fallo que costó caro: un vídeo peor sin ningún aviso.
+Todas las preguntas de diseño iniciales quedaron cerradas, probadas y aprobadas en los Vídeos 01, 02 y 03 y en la Tanda 01 de Shorts (`ADR-001` a `ADR-008` en `ADR.md`). **Cualquier modelo que trabaje en este repositorio tiene prohibido inventar estilos, cambiar coordenadas, alterar volúmenes o improvisar flujos.** Debe limitarse a aplicar las especificaciones exactas de esta sección.
 
-La propuesta es **encajar por tramos**:
+---
 
-1. Miguel graba en bloques cortos, uno por paso.
-2. Cada bloque tiene su narración y su audio TTS.
-3. El script mide cada audio y encaja su clip: si sobra vídeo, acelera o recorta las
-   esperas; si sobra audio, **avisa**, no congela en silencio.
-4. Si el ajuste se sale de un umbral, **el script falla con ruido** y dice en qué tramo.
+### 3.1 Parámetros Globales Innegociables (Comunes a Largos y Shorts)
 
-Lo que **no** está decidido y hay que acordar con Miguel antes de codificar:
+1. **Voz y Modelo TTS (`ADR-001`):**
+   - **Modelo:** `gpt-4o-mini-tts` (API de OpenAI).
+   - **Voz:** `nova`.
+   - **Parámetro de ritmo:** Prohibido enviar `speed` (da error o se ignora en modelos LLM). Se usa exclusivamente `instructions`:
+     - En **Vídeos Largos:** `"Speak in a friendly, clear, and energetic developer tone. Keep a brisk, engaging pace like a senior engineer walking a friend through a cool setup—natural, warm, and direct, never robotic or like a dry academic lecture."`
+     - En **Shorts:** `"Speak at a brisk, punchy, high-retention developer pace. Sound confident, direct, and energetic, with zero long pauses between clauses."`
+   - **Pronunciación fonética en el guion:** Si el guion menciona extensiones o comandos con punto que el TTS lee de forma extraña, escríbelos fonéticamente en el texto enviado al TTS (`"where-dot-exe"`, `"mcp-dot-json"`, `"dot-cmd"`).
 
-- El **tope de aceleración** de un clip y cuánto recorte de esperas es aceptable.
-- Qué pasa cuando el audio es más largo que el clip (¿se ralentiza?, ¿se rechaza?).
-- Si se quemarán **subtítulos** y si hacen falta (un 1-3 minutos se ve muchas veces sin
-  sonido).
-- Si habrá **música de fondo**. Por defecto no: sin ella la mezcla de audio se simplifica
-  mucho.
-- **Quién escribe la narración.** Propuesta: Miguel te pasa una nota breve por tramo,
-  tipo «aquí conecto X, aquí falla Y, aquí lo arreglo», y tú redactas; él aprueba. No se
-  ha confirmado que puedas analizar el vídeo grabado, así que no lo des por hecho.
-- Voz y modelo de TTS (ver abajo). Se elige **escuchando**, no leyendo.
+2. **Mezcla de Audio y Normalización EBU R128 (`ADR-004`):**
+   - **La voz manda siempre:** Primero se mide la sonoridad integrada de la voz con `loudnorm` de FFmpeg (`LUFS_voz`).
+   - **Cama musical a `-18.0 dB` exactos debajo de la voz:**
+     $$\text{objetivo\_musica} = \text{LUFS}_{\text{voz}} - 18.0\text{ dB}, \quad \text{ganancia} = 10^{\frac{\text{objetivo\_musica} - \text{LUFS}_{\text{musica}}}{20.0}}$$
+   - **Prohibido ajustar volumen a ojo** (ej. `volume=0.2` sin medir LUFS).
+   - **Masterización final en doble pasada (`-14.0 LUFS`, `TP=-1.0` o `-1.5`, `LRA=11`):**
+     Se ejecuta **siempre en una pasada final separada con `-c:v copy`** sobre el MP4 ya renderizado. Nunca filtres y copies streams al mismo tiempo en MoviePy.
+
+3. **Sanitización y Privacidad desde el Origen (`ADR-005` y `ADR-007`):**
+   - **Antes de que Miguel grabe en OBS:** Si habrá terminal PowerShell o rutas en archivos de configuración (`.json`, `.env`), proporciona siempre un script de preparación (`preparar_entorno_demo.py`) que coloque binarios/archivos en una ruta neutra (`C:\Tools\...` o `C:\demo\...`) y oculte el usuario de Windows en el prompt de PowerShell (`function prompt { "PS $(Split-Path (Get-Location) -Leaf)> " }`).
+   - **Si ya se grabó y aparece un dato privado (nombres de proyectos de clientes, rutas con usuario, correos):** Tápalo en FFmpeg con `drawbox` usando el color hexadecimal exacto del fondo nativo de la interfaz (ej. `#161616` en Antigravity IDE) para que parezca espacio vacío natural. **Prohibido usar desenfoque (*blur*)**, porque delata censura.
+
+---
+
+### 3.2 Motor 1 — Vídeos Largos (`1920x1080 @ 60fps`, 16:9)
+
+- **Scripts canónicos de referencia (copiar estructura de aquí, no escribir desde cero):**
+  - Montaje, jump-cuts, mezcla musical, subtítulos `.srt` y masterización: `scripts/cursor_mcp_enoent_fix/ensamblar_video_03.py` y `scripts/raw_supabase_vector_search/ensamblar_master_completo.py`.
+  - Miniatura `1280x720`: `scripts/cursor_mcp_enoent_fix/generar_thumbnail.py`.
+- **Reglas exactas del Motor 1:**
+  1. **Grabación por micro-tramos:** Miguel graba 3 a 5 clips cortos (`clip_01.mp4`, `clip_02.mp4`, etc.). Antes de redactar o montar, extrae fotogramas cada 1–2 segundos con FFmpeg y verifica visualmente qué ocurre en cada segundo.
+  2. **Eliminación de tiempos muertos con Jump Cuts (`ADR-003`, `ADR-006`, `ADR-007`):**
+     - Prohibido mostrar esperas de red, animaciones de carga de IA o tropiezos de teclado.
+     - Recorta las esperas con un *jump cut* limpio en FFmpeg o acelera tipeos largos (máximo `1.5x–2.5x`), haciendo coincidir el corte con el verbo de acción en la voz (ej. al decir *"paste"* o *"hit Enter"*).
+  3. **Corte final de cada tramo anclado al audio (`ADR-002` / Regla 11 bis):**
+     $$\text{Duración del tramo de vídeo} = \text{Fin de la última palabra hablada} + 1.0\text{ a }1.2\text{ s}$$
+     - **Prohibido** dejar colas en silencio $> 1.5\text{ s}$ y **prohibido** congelar el último fotograma (*freeze frame*).
+  4. **Zoom digital programático (`ADR-006`):** Si una terminal o panel tiene letra pequeña, aplica zoom digital suave en FFmpeg (`crop` + `scale=1920:1080:flags=bicubic`) en lugar de pedirle a Miguel que haga zoom en OBS.
+  5. **Subtítulos `.srt` externos (NO quemados en vídeos largos):**
+     - En vídeos largos **nunca** se queman subtítulos en el vídeo (ensucian el código en pantalla completa).
+     - Se genera un archivo `.srt` externo usando Whisper local para obtener los *timestamps* y `SequenceMatcher` contra el guion oficial para garantizar 0 faltas de ortografía en términos técnicos (`pgvector`, `ENOENT`, `Supabase`, `uvx`).
+  6. **Miniatura (`1280x720`, `< 2048 KB`):**
+     - Fondo oscuro pero **con fuente de luz y borde exterior visible** (contorno o resplandor cian/esmeralda/rojo en los bordes para que no se funda con el `#0f0f0f` del modo oscuro de YouTube).
+     - De 2 a 4 palabras máximas en tipografía bold gigante, verificada reescalando a `120 px` de ancho.
+
+---
+
+### 3.3 Motor 2 — YouTube Shorts (`1080x1920 @ 60fps`, 9:16)
+
+- **Script motor oficial (usar directamente añadiendo el diccionario `spec` del nuevo Short):**
+  - `scripts/shorts/motor_shorts.py` (`ADR-008`).
+  - Fondo animado común: `assets/shorts/shorts_bg_loop.mp4` (generado por `scripts/shorts/generar_fondo_shorts.py`).
+- **Por qué existe un motor aparte:** Los Shorts buscan suscriptores y clic hacia el `Related video` en el feed vertical. Sus reglas de composición y corte final son opuestas a las de los vídeos largos.
+- **Reglas exactas del Motor 2 (Fórmula v2 aprobada — prohibido modificar su estética):**
+  1. **Viewport Flotante a 90 grados (`1000x860` en `x=40, y=360`):**
+     - El vídeo recortado de la pantalla original se ubica en `x=40, y=360` con tamaño `1000x860`.
+     - **Esquinas rectas a 90 grados.** Queda **terminantemente prohibido** poner bordes redondeados, marcos de colores o barras superiores falsas estilo macOS (los 3 puntitos). Se muestra la interfaz original flotando sobre el fondo animado con su sombra 3D profunda (`rgba(0,0,0,195)` con blur gaussiano).
+  2. **Hook tipográfico superior flotante (sin cajas):**
+     - Dos líneas en mayúsculas arriba: Línea 1 en blanco (`#FFFFFF`, `y=155`) y Línea 2 en verde esmeralda (`#3ECF8E`, `y=235`), fuente `Segoe UI Bold` 64pt con sombra negra dura. Prohibido encerrar el hook en cajas o rectángulos.
+  3. **Inicio en movimiento (`0.00s`) + Loop Infinito Doble (Verbal y Visual al fotograma):**
+     - **Prohibido** empezar el Short con una pantalla estática. El Plano 1 (`0.00s`) debe arrancar en mitad de una acción visual llamativa.
+     - **Loop verbal (`margen_cierre_s = 0.08`):** El guion del Short termina en una frase inconclusa/conector (*"...because that's literally how"*, *"...because it's time to"*, *"...if you noticed"*) que empalma gramaticalmente con la primera palabra del segundo `0.00s`. El vídeo se corta exactamente a **`+0.08s`** de la última palabra medida con Whisper (sin silencios al final).
+     - **Loop visual (`0 píxeles` de salto):** Si el Plano 1 empieza en el segundo $t_0$ de un clip origen con `crop` $C_1$, el último plano del Short **debe** usar ese mismo clip origen y el mismo `crop` $C_1$, terminando exactamente en $t_0$ (por ejemplo, de $t_0 - 2.5\text{ s}$ a $t_0$). Así, cuando YouTube reinicia el Short del último frame al primero, la imagen continúa en movimiento continuo sin ningún salto.
+  4. **Sincronía estricta voz-corte visual por palabra:**
+     - Una vez generado el TTS del Short, se corre Whisper (`word_timestamps=True`) para ver en qué segundo exacto se pronuncia cada acción clave, y se ajustan los `target_dur` de cada `shot` para que los cambios de plano caigan al milisegundo sobre la palabra hablada.
+  5. **Subtítulos quemados dinámicos `.ass` (`y=1375`) + Diccionario Fonético (`REEMPLAZOS_SUBS_VISUALES`):**
+     - A diferencia de los largos, los Shorts **sí llevan subtítulos quemados** en `y=1375` (2–3 palabras por bloque, `Segoe UI Bold` 76pt, animación pop-in `115% -> 100%`, palabras clave resaltadas en `#3ECF8E` y `#FFD166`).
+     - Toda palabra escrita fonéticamente para el TTS (`where-dot-exe`, `mcp-dot-json`, `dot-cmd`) debe estar registrada en `REEMPLAZOS_SUBS_VISUALES` dentro de `motor_shorts.py` para que en pantalla se pinte la sintaxis técnica exacta (`WHERE.EXE`, `MCP.JSON`, `.CMD`).
+  6. **Banner CTA inferior (`y=1675`) + Música por tanda:**
+     - Píldora inferior discreta con flecha dorada `▼` apuntando al enlace de `Related video` de YouTube Studio.
+     - La música de la tanda se toma desde el segundo indicado por Miguel (en la Tanda 01: `assets/shorts/music/The_Iron_Grove.mp3` desde `00:00:14.0`), atenuada a `-18.0 dB` bajo la voz y masterizada a `-14.0 LUFS`.
 
 ---
 
@@ -229,12 +278,42 @@ la nomenclatura canónica de assets y los criterios editoriales de documentales.
 
 ---
 
-## 8. Por dónde empezar
+## 8. Receta de Ejecución Paso a Paso (Checklist para Cualquier Modelo)
 
-1. Lee este archivo y los documentos de la tabla del apartado 4 que correspondan.
-2. **No escribas código todavía.** Propón por escrito el diseño del encaje por tramos y
-   las preguntas abiertas del apartado 3.
-3. Cuando estéis 1:1 en la lógica, construye lo mínimo: **un solo tramo** de principio a
-   fin (grabación → narración → TTS → encaje → mp4 con audio normalizado).
-4. Pruébalo. Mide cuánto cuesta. Enseña el resultado.
-5. Solo entonces, el flujo completo de `testeo → apruebo → ADR → commit → push`.
+Si eres un agente ejecutando un nuevo vídeo largo o un nuevo Short, **sigue exactamente este orden mecánico sin saltarte ningún paso ni inventar nada**:
+
+### Caso A: Producir un Nuevo Vídeo Largo (`1920x1080 @ 60fps`)
+1. **Investigación y Entorno Pre-Grabación:**
+   - Verifica en la web la sintaxis oficial y versión exacta de la herramienta.
+   - Si el tutorial usa terminal o rutas locales, crea un script `preparar_entorno_demo.py` (basado en `scripts/cursor_mcp_enoent_fix/preparar_entorno_demo.py`) que deje listas las rutas neutras (`C:\Tools\...`) y el prompt de PowerShell limpio sin nombre de usuario.
+   - Entrégale a Miguel la guía de grabación dividida en 3 a 4 clips cortos.
+2. **Inspección Visual de los Clips Grabados (Sin pedir permiso — Regla 15):**
+   - Usa `ffprobe` para verificar resolución/fps y extrae fotogramas cada 1–2 segundos con FFmpeg para ver exactamente en qué segundo ocurre cada clic, tipeo, espera o tropiezo, y verificar que no haya secretos expuestos (Regla 12).
+3. **Propuesta de Guion por Tramos y Presupuesto TTS (Reglas 1 y 14):**
+   - Presenta a Miguel el guion en inglés por tramos cortos, el conteo exacto de caracteres/llamadas a OpenAI TTS (`gpt-4o-mini-tts`, voz `nova`) y los puntos de corte/jump-cut propuestos. **Espera su aprobación antes de llamar a la API de TTS.**
+4. **Montaje, Sincronía, Mezcla y Subtítulos `.srt`:**
+   - Copia la estructura de `scripts/cursor_mcp_enoent_fix/ensamblar_video_03.py`.
+   - Genera los audios TTS, mide el fin exacto de la última palabra hablada con Whisper y corta cada tramo a `+1.0s`–`1.2s` del final de la voz (Regla 11 bis).
+   - Mezcla la cama musical a `-18.0 dB` relativos a la voz y aplica `loudnorm` de doble pasada a `-14.0 LUFS` con `-c:v copy`.
+   - Genera el archivo `.srt` externo alineado con `SequenceMatcher` contra el guion.
+   - Genera la miniatura `1280x720` (`< 2048 KB`) siguiendo `scripts/cursor_mcp_enoent_fix/generar_thumbnail.py` y verifica su legibilidad reducida a `120 px`.
+5. **Verificación y Entrega:**
+   - Comprueba el máster con `ffprobe` (`1920x1080`, `60/1`, `-14.0 LUFS`) y extrae capturas de los cortes clave para mostrárselas a Miguel.
+
+### Caso B: Producir un Nuevo YouTube Short (`1080x1920 @ 60fps`)
+1. **Inspección de los Fotogramas del Vídeo Largo:**
+   - Identifica los 4 momentos visuales más potentes del vídeo largo y elige el punto exacto $t_0$ donde empieza la acción del Plano 1 (y su tramo previo $[t_0 - \Delta t,\; t_0]$ para el último plano de bucle infinito).
+2. **Propuesta del `spec` y Presupuesto TTS (Reglas 1 y 14):**
+   - Propón a Miguel:
+     - `hook_top` (blanco) y `hook_bottom` (verde `#3ECF8E`).
+     - El guion de 20–26 segundos (~60–75 palabras) rematado en un conector abierto que empalme con la primera palabra del inicio.
+     - El número de caracteres (~330–400 chars, `< $0.01 USD`) para la llamada a `gpt-4o-mini-tts` (`nova`).
+   - **Espera su aprobación antes de ejecutar.**
+3. **Ejecución en `scripts/shorts/motor_shorts.py`:**
+   - Añade el diccionario `spec` en `scripts/shorts/motor_shorts.py` (con `regenerar_tts: False` tras generar el audio por primera vez para no gastar doble).
+   - Revisa la salida de timestamps por palabra de Whisper en consola y ajusta los `target_dur` de cada `shot` para que cada corte visual coincida al milisegundo con la palabra hablada, manteniendo que la suma de `target_dur` sea igual a `fin_ultima_palabra + 0.08s`.
+   - Si el guion usa palabras fonéticas (`where-dot-exe`, `mcp-dot-json`, etc.), verifica que estén en `REEMPLAZOS_SUBS_VISUALES`.
+4. **Verificación obligatoria antes de enseñar a Miguel (Regla 10):**
+   - Ejecuta `ffprobe` sobre el `_master.mp4` (`1080x1920`, `60/1`, `-14.0 LUFS`) y extrae 5 capturas (inicio `0.05s`, planos intermedios y final del loop) comprobando que las ventanas estén bien encuadradas, a 90 grados, sin marcos falsos y con el loop visual exacto.
+5. **Cierre del Ciclo (Regla 6):**
+   - `testeo → Miguel aprueba → ADR.md → registro_tiempos.md → git commit → git push`.

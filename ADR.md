@@ -181,5 +181,42 @@ Producción del Vídeo 03 (*Fix Cursor MCP Server Errors: The ENOENT Fix*, slug 
 - **Descartado:** Regrabar el `clip_02` por el tropiezo al pegar el JSON. El *jump-cut* sobre la selección de `"uvx"` ahorró tiempo de grabación y produjo una transición más rápida y limpia que el tipeo manual.
 - **Descartado:** Censurar rutas de usuario en la terminal con `drawbox` en movimiento. Sanitizar el prompt y la ruta antes de abrir OBS es más limpio, rápido y a prueba de fallos.
 
+---
+
+## ADR-008: Motor Independiente de YouTube Shorts v2 (Viewport Flotante 90°, Loop Infinito al Fotograma y Subtítulos `.ass` con Mapeo Fonético)
+
+- **Fecha:** 23 de octubre de 2026
+- **Estado:** Aceptado e implementado (validado en Tanda 01: Shorts 01, 02 y 03)
+
+### Contexto
+El canal necesita publicar YouTube Shorts (`1080x1920`, `60 fps`, 20–30 segundos) extraídos de los vídeos largos para captar suscriptores cualificados y redirigir tráfico hacia los tutoriales completos (mediante el enlace nativo `Related video` de YouTube Studio). El reto técnico era adaptar grabaciones horizontales 16:9 de código y terminales a formato vertical 9:16 sin que el código se volviera ilegible ni pareciera un recorte genérico de redes sociales.
+
+### Decisiones
+1. **Dos motores separados (`scripts/shorts/motor_shorts.py`):**
+   - Los Shorts tienen un motor independiente del pipeline de vídeos largos porque sus reglas de composición, ritmo y cierre son opuestas (en vídeos largos hay margen de cierre de `1.0–1.2s`; en Shorts el corte es de `0.08s` para forzar el bucle infinito).
+2. **Estética de Viewport Flotante a 90° sin marcos artificiales:**
+   - Lienzo `1080x1920 @ 60fps` sobre fondo animado en bucle (`assets/shorts/shorts_bg_loop.mp4`, rejilla oscura `#0A0E17` con acentos `#00F5FF` y `#3ECF8E`).
+   - Ventana central de `1000x860` ubicada en `x=40, y=360` con **esquinas rectas a 90 grados**, sin bordes pintados ni barras de ventana falsas, flotando sobre una sombra 3D profunda (`rgba(0,0,0,195)` con blur gaussiano).
+3. **Hook tipográfico flotante superior + Acción en movimiento desde el frame `0.00s`:**
+   - Titular de 2 líneas en la zona superior (`y=155` en blanco `#FFFFFF` + `y=235` en verde esmeralda `#3ECF8E`, fuente `Segoe UI Bold` 64pt con sombra dura) sin cajas contenedoras.
+   - El vídeo empieza en el segundo `0.00s` con una acción visual de alto impacto en movimiento (nunca una pantalla estática).
+4. **Loop infinito doble (verbal y visual al fotograma exacto):**
+   - **Loop verbal:** El guion termina en un conector abierto (*"...because that's literally how"*, *"...because it's time to"*, *"...if you noticed"*) que empalma gramaticalmente con la primera palabra del segundo `0.00s`. El corte se ejecuta a `+0.08s` de la última palabra medida con Whisper.
+   - **Loop visual (`0 px` de salto):** Si el Plano 1 arranca en el instante $t_0$ de un clip origen con `crop` $C_1$, el último plano del Short toma el mismo clip origen con el mismo `crop` $C_1$ y recorre el intervalo $[t_0 - \Delta t,\; t_0]$. Así el último fotograma del Short es contiguo al primer fotograma del Short.
+5. **Sincronía estricta voz-corte visual por palabra (Whisper timestamps):**
+   - Los tiempos `target_dur` de cada plano intermedio se calculan leyendo los timestamps por palabra de Whisper sobre el MP3 generado, de modo que cada cambio de plano ocurra exactamente cuando la voz pronuncia la acción correspondiente (ej. *"run where.exe"* → corte a PowerShell; *"hit Reload"* → corte al botón Reload).
+6. **Subtítulos quemados `.ass` con diccionario de traducción fonética → visual (`REEMPLAZOS_SUBS_VISUALES`):**
+   - Subtítulos dinámicos de 2–3 palabras en `y=1375` (`Segoe UI Bold` 76pt, animación pop-in `115% -> 100%` y resaltado automático en verde `#3ECF8E` o dorado `#FFD166`).
+   - Para evitar que OpenAI TTS deletree mal extensiones de archivo, el guion se envía con escritura fonética (`"where-dot-exe"`, `"mcp-dot-json"`, `"dot-cmd"`) y el motor reemplaza automáticamente esos tokens en los subtítulos visuales por la sintaxis técnica real (`WHERE.EXE`, `MCP.JSON`, `.CMD`).
+7. **Cama musical por tanda desde un segundo fijo (`offset=14.0s`) + Masterización EBU R128:**
+   - En toda la primera tanda se utiliza `assets/shorts/music/The_Iron_Grove.mp3` arrancando siempre en `00:00:14.0`, atenuada a `-18.0 dB` respecto a la voz y normalizada en dos pasadas a `-14.0 LUFS` (`-c:v copy`).
+
+### Consecuencias y alternativas descartadas
+- **Descartado (v1):** Bordes redondeados y barra superior estilo macOS con 3 círculos de colores. Restaban seriedad técnica y alteraban la interfaz original con la que se grabó el tutorial.
+- **Descartado (v1):** Empezar el Short con una pantalla estática de código/diagrama. Un inicio estático destruye la retención en los primeros 2 segundos del feed vertical.
+- **Descartado (v1):** Dejar `1.0s` de margen al final del Short o cerrar en un plano distinto al inicial. Rompía tanto el ritmo verbal como la continuidad visual del bucle.
+- **Descartado:** Escribir `where.exe` o `mcp.json` literalmente en el prompt de TTS (suena artificial) o dejar `WHERE-DOT-EXE` escrito en el subtítulo quemado (se ve amateur). El diccionario dual fonético/visual resuelve ambos mundos.
+
+
 
 
